@@ -30,6 +30,7 @@ using FlushPrimitiveFn = void (*)(void*);
 using FontOnRenderFn = void (*)(void*, void*);
 using CursorUpdateFn = void (*)(void*);
 using WeaponRenderItemUiFn = void (*)(void*);
+using CustomMapDrawFn = void (*)(void*);
 
 struct IntRect
 {
@@ -70,6 +71,8 @@ constexpr std::ptrdiff_t kFontStringXOffset = 0x400;
 constexpr std::size_t kFontStringStride = 0x414;
 constexpr std::ptrdiff_t kUiCoreVtableRva = 0x995F60;
 constexpr std::ptrdiff_t kUiCoreVtableOffset = 0x0;
+constexpr std::ptrdiff_t kMiniMapVtableRva = 0x9CA608;
+constexpr std::ptrdiff_t kDeviceWidthRva = 0xD42F04;
 constexpr std::ptrdiff_t kInputModeCheckRva = 0x436B0;
 constexpr std::ptrdiff_t kInputModeRva = 0xCE3130;
 
@@ -80,9 +83,11 @@ std::atomic<float> g_safe_width = 0.0F;
 std::atomic<float> g_horizontal_ratio = 1.0F;
 std::atomic<bool> g_mouse_cursor_path_logged = false;
 std::atomic<bool> g_controller_cursor_path_logged = false;
+std::atomic<bool> g_minimap_path_logged = false;
 thread_local std::int32_t g_point_type = -1;
 thread_local bool g_crosshair_primitive = false;
 thread_local bool g_preserve_local_width = false;
+thread_local bool g_minimap_render = false;
 thread_local bool g_native_weapon_ui = false;
 thread_local std::vector<UiPoint> g_buffered_points;
 const std::int32_t* g_input_mode = nullptr;
@@ -96,6 +101,9 @@ FlushPrimitiveFn g_flush_primitive = nullptr;
 FontOnRenderFn g_font_on_render = nullptr;
 CursorUpdateFn g_cursor_update = nullptr;
 WeaponRenderItemUiFn g_weapon_render_item_ui = nullptr;
+CustomMapDrawFn g_custom_map_draw = nullptr;
+std::uintptr_t g_minimap_vtable = 0;
+std::uint32_t* g_device_width = nullptr;
 bool g_initialized = false;
 
 constexpr std::array<std::uint8_t, 20> kOnDeviceResetBytes{
@@ -125,6 +133,8 @@ constexpr std::array<std::uint8_t, 20> kCursorUpdateBytes{
 constexpr std::array<std::uint8_t, 20> kWeaponRenderItemUiBytes{
     0x48, 0x89, 0x5C, 0x24, 0x08, 0x57, 0x48, 0x83, 0xEC, 0x20,
     0x48, 0x8B, 0x01, 0x48, 0x8B, 0xD9, 0xFF, 0x90, 0x88, 0x02};
+constexpr std::array<std::uint8_t, 5> kCustomMapDrawBytes{
+    0xE9, 0xBB, 0x50, 0xF4, 0xFF};
 constexpr std::array<std::uint8_t, 11> kInputModeCheckBytes{
     0x83, 0x3D, 0x79, 0xFA, 0xC9, 0x00, 0x02, 0x0F, 0x94, 0xC0, 0xC3};
 constexpr std::ptrdiff_t kPushPointExpectedRva = 0x743120;
@@ -301,6 +311,16 @@ void set_scissor_hook(void* self, const void* rect)
 
     IntRect adjusted = *static_cast<const IntRect*>(rect);
     const float offset = g_offset_x.load();
+    if (g_minimap_render)
+    {
+        adjusted.x1 = static_cast<std::int32_t>(
+            std::lround(offset + static_cast<float>(adjusted.x1)));
+        adjusted.x2 = static_cast<std::int32_t>(
+            std::lround(offset + static_cast<float>(adjusted.x2)));
+        g_set_scissor(self, &adjusted);
+        return;
+    }
+
     const float ratio = g_horizontal_ratio.load();
     adjusted.x1 = static_cast<std::int32_t>(
         std::lround(offset + static_cast<float>(adjusted.x1) * ratio));
@@ -316,6 +336,13 @@ void push_point_hook(
     if (g_native_weapon_ui)
     {
         g_push_point(self, x, y, z, color, u, v);
+        return;
+    }
+
+    if (g_minimap_render)
+    {
+        g_push_point(
+            self, g_offset_x.load() + x, y, z, color, u, v);
         return;
     }
 
@@ -476,6 +503,54 @@ void weapon_render_item_ui_hook(void* self)
     g_native_weapon_ui = previous;
 }
 
+void custom_map_draw_hook(void* self)
+{
+    if (self == nullptr ||
+        *static_cast<const std::uintptr_t*>(self) != g_minimap_vtable)
+    {
+        g_custom_map_draw(self);
+        return;
+    }
+
+    void* const ui_core = g_ui_core.load();
+    if (ui_core == nullptr)
+    {
+        g_custom_map_draw(self);
+        return;
+    }
+
+    auto scales = reinterpret_cast<float*>(
+        static_cast<std::byte*>(ui_core) + kScaleOffset);
+    const float original_scale_x = scales[0];
+    const float safe_width = g_safe_width.load();
+    if (!std::isfinite(original_scale_x) ||
+        original_scale_x <= 0.0F ||
+        safe_width <= 0.0F ||
+        g_device_width == nullptr)
+    {
+        g_custom_map_draw(self);
+        return;
+    }
+
+    const bool previous = g_minimap_render;
+    const std::uint32_t original_device_width = *g_device_width;
+    scales[0] = safe_width / kUiWidth;
+    *g_device_width = static_cast<std::uint32_t>(std::lround(safe_width));
+    g_minimap_render = true;
+    if (!g_minimap_path_logged.exchange(true))
+    {
+        cs4x3ui::log::write(std::format(
+            "UI diagnostic: CUIMiniMap draw scale X {:.6f} -> {:.6f}, "
+            "Device width {} -> {}",
+            original_scale_x, scales[0], original_device_width,
+            *g_device_width));
+    }
+    g_custom_map_draw(self);
+    g_minimap_render = previous;
+    *g_device_width = original_device_width;
+    scales[0] = original_scale_x;
+}
+
 template <typename Function>
 bool create_hook(
     const char* name, void* target, void* detour, Function& original)
@@ -501,6 +576,10 @@ bool install_runtime_hooks()
         return true;
 
     const HMODULE executable = GetModuleHandleW(nullptr);
+    g_minimap_vtable =
+        reinterpret_cast<std::uintptr_t>(executable) + kMiniMapVtableRva;
+    g_device_width = reinterpret_cast<std::uint32_t*>(
+        reinterpret_cast<std::byte*>(executable) + kDeviceWidthRva);
     log::write(std::format(
         "Runtime executable base: 0x{:X}",
         reinterpret_cast<std::uintptr_t>(executable)));
@@ -594,13 +673,17 @@ bool install_runtime_hooks()
     std::byte* const weapon_render_item_ui = resolve(
         {kWeaponRenderItemUiBytes, "xxxxxxxxxxxxxxxxxxxx"},
         weapon_render_item_ui_count);
+    std::size_t custom_map_draw_count = 0;
+    std::byte* const custom_map_draw = resolve(
+        {kCustomMapDrawBytes, "xxxxx"}, custom_map_draw_count);
 
     if (on_device_reset == nullptr || ui_core_constructor == nullptr ||
         set_scissor == nullptr || push_point == nullptr ||
         start_primitive == nullptr || flush_primitive == nullptr ||
         font_on_render == nullptr ||
         cursor_update == nullptr ||
-        weapon_render_item_ui == nullptr)
+        weapon_render_item_ui == nullptr ||
+        custom_map_draw == nullptr)
     {
         constexpr std::array<std::string_view, 6> names{
             "UICore::OnDeviceReset", "UICore::UICore",
@@ -632,6 +715,12 @@ bool install_runtime_hooks()
             log::write(std::format(
                 "Fail-safe: signature 'CWeapon::render_item_ui' has {} matches",
                 weapon_render_item_ui_count));
+        }
+        if (custom_map_draw_count != 1)
+        {
+            log::write(std::format(
+                "Fail-safe: signature 'CUICustomMap::Draw' has {} matches",
+                custom_map_draw_count));
         }
         return false;
     }
@@ -671,7 +760,11 @@ bool install_runtime_hooks()
         create_hook(
             "CWeapon::render_item_ui", weapon_render_item_ui,
             reinterpret_cast<void*>(&weapon_render_item_ui_hook),
-            g_weapon_render_item_ui);
+            g_weapon_render_item_ui) &&
+        create_hook(
+            "CUICustomMap::Draw", custom_map_draw,
+            reinterpret_cast<void*>(&custom_map_draw_hook),
+            g_custom_map_draw);
 
     if (!created || MH_EnableHook(MH_ALL_HOOKS) != MH_OK)
     {
