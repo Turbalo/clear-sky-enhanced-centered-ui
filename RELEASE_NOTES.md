@@ -1,13 +1,14 @@
-# Version 1.0.0
+# Version 1.0.1
 
-Initial public release for the Steam Enhanced Edition build
-`1.10.3+68-42`.
+Maintenance release for the Steam Enhanced Edition build `1.10.3+68-42`.
+It fixes the gameplay minimap on ultrawide displays.
 
 ## Highlights
 
 - Universal centered 16:10 UI safe-zone without resolution presets
 - Native ultrawide 3D scene, weapon view, postprocess, and sniper scopes
 - Corrected menus, HUD, dialogs, fonts, clipping, cursor, and clickable zones
+- Corrected minimap centering and proportions throughout 360-degree rotation
 - Corrected gameplay HUD atlas
 - Automatic Steam installer with backup, uninstall, and proxy chain-loading
 - Manual `xrEngine.exe` selection with Steam path preselection
@@ -19,6 +20,7 @@ Initial public release for the Steam Enhanced Edition build
 - Live 5120x1440 single-player gameplay
 - Main menu rendering, hover states, and clicks
 - Gameplay HUD and normal crosshair
+- Minimap raster, markers, centering, and full rotation
 - Sniper scope native aspect
 - Dialog text bounds and inventory weapon slot
 - Intro cutscene

@@ -1,8 +1,8 @@
 #include <winver.h>
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,0,0
- PRODUCTVERSION 1,0,0,0
+ FILEVERSION 1,0,1,0
+ PRODUCTVERSION 1,0,1,0
  FILEFLAGSMASK VS_FFI_FILEFLAGSMASK
 #ifdef _DEBUG
  FILEFLAGS VS_FF_DEBUG
@@ -19,11 +19,11 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Clear Sky Centered UI contributors"
             VALUE "FileDescription", "Clear Sky Enhanced Edition centered 16:10 UI runtime"
-            VALUE "FileVersion", "1.0.0.0"
+            VALUE "FileVersion", "1.0.1.0"
             VALUE "InternalName", "cs4x3ui"
             VALUE "OriginalFilename", "dinput8.dll"
             VALUE "ProductName", "Clear Sky Centered UI"
-            VALUE "ProductVersion", "1.0.0"
+            VALUE "ProductVersion", "1.0.1"
         END
     END
     BLOCK "VarFileInfo"

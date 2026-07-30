@@ -17,6 +17,7 @@ resolution or the 3D aspect ratio.
   scope proportions
 - Corrected menus, HUD, dialogs, text, clipping, mouse input, and clickable
   zones
+- Corrected minimap centering, rotation, and aspect ratio
 - Corrected gameplay HUD atlas
 - Automatic Steam detection with manual `xrEngine.exe` selection
 - Transactional backup, uninstall, and one-level `dinput8.dll` chain-loading
@@ -56,9 +57,15 @@ Verified `xrEngine.exe` SHA-256:
 89BA7FC6B84BB18A3D0B47936B2E67BD1B7CC8B642A4F322B068C9774A8741E1
 ```
 
+Version `1.0.1` payload `dinput8.dll` SHA-256:
+
+```text
+CC1F4C2ACF605A4441C2994F07E037924A575F199D7FDBE192F8CD14D6F21C8B
+```
+
 Executables with another SHA-256 can be accepted in
 `Signature-compatible` mode. The installer requires a 64-bit Enhanced
-Edition executable and ten unique runtime signatures at their validated
+Edition executable and eleven unique runtime signatures at their validated
 offsets. Classic 32-bit Clear Sky and modified engine builds are rejected.
 
 When validation fails, the installer creates

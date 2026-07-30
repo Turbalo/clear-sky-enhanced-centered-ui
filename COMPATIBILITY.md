@@ -18,9 +18,10 @@ calculation. Each mode still needs visual validation in the supported build.
 Displays wider than 16:10 are centered; 16:10 and narrower displays keep their
 native UI area.
 
-The primary live gameplay pass was completed at 5120x1440 (32:9). Safe-zone
-math and startup were additionally exercised at representative 4:3, 16:9,
-21:9, and 24:10 resolutions.
+The primary live gameplay pass was completed at 5120x1440 (32:9), including
+minimap centering and a full 360-degree rotation check. Safe-zone math and
+startup were additionally exercised at representative 4:3, 16:9, 21:9, and
+24:10 resolutions.
 
 ## Proxy DLLs
 
@@ -35,7 +36,7 @@ ambiguous. Other proxy names and proxy stacks are not modified.
 
 The Steam Enhanced Edition `1.10.3+68-42` executable is the verified profile.
 Executables with another SHA-256 are accepted only when they are x64 PE32+
-images and all ten runtime signatures occur exactly once at their validated
+images and all eleven runtime signatures occur exactly once at their validated
 RVAs. The installer records either `Verified` or `Signature-compatible` in
 its manifest.
 
@@ -63,8 +64,9 @@ separate runtime port.
 - Controller focus movement and virtual cursor warps
 
 The 32:9 single-player pass verified the main menu and clicks, gameplay HUD,
-normal crosshair, sniper scope, dialogs and text bounds, inventory weapon
-slot, intro cutscene, physical mouse mapping, and Alt+Tab cursor recovery.
+normal crosshair, sniper scope, minimap centering and rotation, dialogs and
+text bounds, inventory weapon slot, intro cutscene, physical mouse mapping,
+and Alt+Tab cursor recovery.
 Items elsewhere in this checklist describe intended coverage and may not all
 have the same depth of manual testing.
 

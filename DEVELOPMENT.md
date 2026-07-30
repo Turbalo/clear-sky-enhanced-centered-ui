@@ -35,7 +35,7 @@ and rejection diagnostics for incompatible signatures.
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass `
-  -File tools\package_release.ps1 -Version 1.0.0
+  -File tools\package_release.ps1 -Version 1.0.1
 ```
 
 The packaging script checks that the payload DLL matches the selected build,

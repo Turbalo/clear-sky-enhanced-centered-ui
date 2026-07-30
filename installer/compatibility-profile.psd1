@@ -52,6 +52,11 @@
             Hex = '48 89 5C 24 08 57 48 83 EC 20 48 8B 01 48 8B D9 FF 90 88 02'
         }
         @{
+            Name = 'CUICustomMap::Draw'
+            ExpectedRva = 0x292080
+            Hex = 'E9 BB 50 F4 FF'
+        }
+        @{
             Name = 'input mode reference'
             ExpectedRva = 0x436B0
             Hex = '83 3D 79 FA C9 00 02 0F 94 C0 C3'

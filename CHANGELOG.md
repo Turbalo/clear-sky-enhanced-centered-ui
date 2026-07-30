@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.1 - 2026-07-31
+
+- Corrected minimap centering on ultrawide displays.
+- Corrected minimap aspect compensation during rotation.
+- Kept map markers, the map raster, clipping, and the centered safe-zone in
+  one coordinate system.
+- Added installer validation for the `CUICustomMap::Draw` runtime signature.
+
 ## 1.0.0 - 2026-07-30
 
 - Added a runtime centered 16:10 UI safe-zone for ultrawide displays.
