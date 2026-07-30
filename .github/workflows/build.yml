@@ -1,0 +1,38 @@
+name: Build and test
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  windows:
+    runs-on: windows-2022
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Python dependencies
+        run: python -m pip install -r tools/requirements.txt
+
+      - name: Configure
+        run: cmake -S . -B build -A x64
+
+      - name: Build
+        run: cmake --build build --config RelWithDebInfo
+
+      - name: Run native tests
+        run: ctest --test-dir build -C RelWithDebInfo --output-on-failure
+
+      - name: Run menu XML tests
+        run: python -m unittest tests.test_menu_backplates
+
+      - name: Validate HUD atlas
+        run: >-
+          python tools/validate_ui_hud.py
+          installer/payload/gamedata/textures/ui/ui_hud.dds

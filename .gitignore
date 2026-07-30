@@ -1,0 +1,10 @@
+/build/
+/dist/
+/work/
+/generated/
+/.vs/
+/.vscode/
+__pycache__/
+*.pyc
+*.pdb
+cs4x3ui.log

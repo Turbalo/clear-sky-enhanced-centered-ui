@@ -1,0 +1,33 @@
+#include <winver.h>
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,0,0
+ PRODUCTVERSION 1,0,0,0
+ FILEFLAGSMASK VS_FFI_FILEFLAGSMASK
+#ifdef _DEBUG
+ FILEFLAGS VS_FF_DEBUG
+#else
+ FILEFLAGS 0
+#endif
+ FILEOS VOS_NT_WINDOWS32
+ FILETYPE VFT_DLL
+ FILESUBTYPE 0
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904B0"
+        BEGIN
+            VALUE "CompanyName", "Clear Sky Centered UI contributors"
+            VALUE "FileDescription", "Clear Sky Enhanced Edition centered 16:10 UI runtime"
+            VALUE "FileVersion", "1.0.0.0"
+            VALUE "InternalName", "cs4x3ui"
+            VALUE "OriginalFilename", "dinput8.dll"
+            VALUE "ProductName", "Clear Sky Centered UI"
+            VALUE "ProductVersion", "1.0.0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x0409, 1200
+    END
+END
